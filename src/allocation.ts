@@ -14,6 +14,12 @@ type ProductionReport = {
   netBalance: number;
 };
 
+type DisplayRecord = {
+  label: string;
+  value: number;
+  color: string;
+};
+
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -51,13 +57,31 @@ function renderShiftReport(productionReport: ProductionReport) {
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${totalProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${productionReport.totalProduction}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, productionReport.totalProduction * 14, 20);
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${productionReport.suppliesConsumed}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, productionReport.suppliesConsumed * 14, 20);
+  const textColor = "#233e43";
+
+  const displayRecords: DisplayRecord[] = [
+    {
+      label: "Production",
+      value: productionReport.totalProduction,
+      color: "#27766b",
+    },
+    {
+      label: "Consumption",
+      value: productionReport.suppliesConsumed,
+      color: "#a44d23",
+    },
+  ];
+
+  for (const [index, displayRecord] of displayRecords.entries()) {
+    ctx.fillStyle = textColor;
+    ctx.fillText(
+      `${displayRecord.label}: ${displayRecord.value}`,
+      18,
+      102 + index * 52,
+    );
+    ctx.fillStyle = displayRecord.color;
+    ctx.fillRect(18, 110 + index * 52, displayRecord.value * 14, 20);
+  }
 }
 
 function renderTextReadout(productionReport: ProductionReport) {
