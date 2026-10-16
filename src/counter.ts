@@ -49,10 +49,12 @@ eventAnnouncer.addEventListener("charge-changed", (event) => {
   drawMeter(snapshot);
 });
 
-function updateStats(shieldSnapshot: ShieldSnapshot) {
+function onChargeChange(event: Event) {
+  const snapshot = (event as CustomEvent<ShieldSnapshot>).detail;
+
   panelUpdates++;
   diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
-  renderStats(shieldSnapshot);
+  renderStats(snapshot);
 }
 
 function renderStats(shieldSnapshot: ShieldSnapshot) {
@@ -72,7 +74,6 @@ function setCurrCharge(shieldSnapshot: ShieldSnapshot, next: number) {
       detail: shieldSnapshot,
     }),
   );
-  if (panel) updateStats(shieldSnapshot);
 }
 
 document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
@@ -89,9 +90,11 @@ document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
   panel = document.createElement("p");
   host.append(panel);
   renderStats(currentShield);
+  eventAnnouncer.addEventListener("charge-changed", onChargeChange);
 };
 document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
   if (!panel) return;
+  eventAnnouncer.removeEventListener("charge-changed", onChargeChange);
   panel.remove();
   panel = null;
 };
