@@ -5,22 +5,24 @@ const ctx = canvas.getContext("2d")!;
 const readout = document.querySelector<HTMLParagraphElement>(
   "#allocation-readout",
 )!;
+
 let totalProducers = 2;
+
+type ProductionReport = {
+  totalProduction: number;
+  suppliesConsumed: number;
+  netBalance: number;
+};
 
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const { totalProduction, suppliesConsumed, netBalance } = calculateProduction(
+  const productionReport: ProductionReport = calculateProduction(
     totalProducers,
   );
   renderCrewSlots(totalProducers);
-  renderShiftReport(totalProducers, totalProduction, suppliesConsumed);
-  renderTextReadout(
-    totalProducers,
-    totalProduction,
-    suppliesConsumed,
-    netBalance,
-  );
+  renderShiftReport(productionReport);
+  renderTextReadout(productionReport);
 }
 
 function calculateProduction(totalProducers: number) {
@@ -45,33 +47,24 @@ function renderCrewSlots(totalProducers: number) {
   }
 }
 
-function renderShiftReport(
-  totalProducers: number,
-  totalProduction: number,
-  suppliesConsumed: number,
-) {
+function renderShiftReport(productionReport: ProductionReport) {
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
   ctx.fillText(`Producers: ${totalProducers} / 6`, 18, 76);
-  ctx.fillText(`Production: ${totalProduction}`, 18, 102);
+  ctx.fillText(`Production: ${productionReport.totalProduction}`, 18, 102);
   ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, totalProduction * 14, 20);
+  ctx.fillRect(18, 110, productionReport.totalProduction * 14, 20);
   ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${suppliesConsumed}`, 18, 154);
+  ctx.fillText(`Consumption: ${productionReport.suppliesConsumed}`, 18, 154);
   ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, suppliesConsumed * 14, 20);
+  ctx.fillRect(18, 162, productionReport.suppliesConsumed * 14, 20);
 }
 
-function renderTextReadout(
-  totalProducers: number,
-  totalProduction: number,
-  suppliesConsumed: number,
-  netBalance: number,
-) {
+function renderTextReadout(productionReport: ProductionReport) {
   readout.textContent =
-    `Assigned: ${totalProducers}/6 · Production: ${totalProduction} · Consumption: ${suppliesConsumed} · Balance: ${
-      netBalance > 0 ? "+" : ""
-    }${netBalance}`;
+    `Assigned: ${totalProducers}/6 · Production: ${productionReport.totalProduction} · Consumption: ${productionReport.suppliesConsumed} · Balance: ${
+      productionReport.netBalance > 0 ? "+" : ""
+    }${productionReport.netBalance}`;
 }
 
 document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick = () => {
