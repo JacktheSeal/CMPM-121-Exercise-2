@@ -25,6 +25,8 @@ const currentShield: ShieldSnapshot = {
   missingCharge: 10,
 };
 
+const eventAnnouncer = new EventTarget();
+
 function drawMeter(shieldSnapshot: ShieldSnapshot) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let i = 0; i < shieldSnapshot.capacity; i++) {
@@ -41,6 +43,11 @@ function drawMeter(shieldSnapshot: ShieldSnapshot) {
   readout.textContent =
     `Shield charge: ${shieldSnapshot.currCharge} / ${shieldSnapshot.capacity}`;
 }
+
+eventAnnouncer.addEventListener("charge-changed", (event) => {
+  const snapshot = (event as CustomEvent<ShieldSnapshot>).detail;
+  drawMeter(snapshot);
+});
 
 function updateStats(shieldSnapshot: ShieldSnapshot) {
   panelUpdates++;
@@ -60,7 +67,11 @@ function setCurrCharge(shieldSnapshot: ShieldSnapshot, next: number) {
   shieldSnapshot.currCharge = bounded;
   shieldSnapshot.missingCharge = shieldSnapshot.capacity -
     shieldSnapshot.currCharge;
-  drawMeter(shieldSnapshot);
+  eventAnnouncer.dispatchEvent(
+    new CustomEvent("charge-changed", {
+      detail: shieldSnapshot,
+    }),
+  );
   if (panel) updateStats(shieldSnapshot);
 }
 
