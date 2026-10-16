@@ -9,59 +9,79 @@ const host = document.querySelector<HTMLDivElement>("#counter-panel-host")!;
 const diagnostic = document.querySelector<HTMLParagraphElement>(
   "#counter-diagnostic",
 )!;
-let count = 0;
+
 let panel: HTMLParagraphElement | null = null;
 let panelUpdates = 0;
 
-function drawMeter() {
+type ShieldSnapshot = {
+  currCharge: number;
+  capacity: number;
+  missingCharge: number;
+};
+
+const currentShield: ShieldSnapshot = {
+  currCharge: 0,
+  capacity: 10,
+  missingCharge: 10,
+};
+
+function drawMeter(shieldSnapshot: ShieldSnapshot) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < 10; i++) {
-    ctx.fillStyle = i < count ? "#27766b" : "#c9d2c9";
+  for (let i = 0; i < shieldSnapshot.capacity; i++) {
+    ctx.fillStyle = i < shieldSnapshot.currCharge ? "#27766b" : "#c9d2c9";
     ctx.fillRect(12 + i * 28, 24, 24, 48);
   }
   ctx.fillStyle = "#233e43";
   ctx.font = "16px system-ui";
-  ctx.fillText(`${count} / 10 shield`, 12, 100);
-  readout.textContent = `Shield charge: ${count} / 10`;
+  ctx.fillText(
+    `${shieldSnapshot.currCharge} / ${shieldSnapshot.capacity} shield`,
+    12,
+    100,
+  );
+  readout.textContent =
+    `Shield charge: ${shieldSnapshot.currCharge} / ${shieldSnapshot.capacity}`;
 }
 
-function updateStats() {
+function updateStats(shieldSnapshot: ShieldSnapshot) {
   panelUpdates++;
   diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
-  renderStats();
+  renderStats(shieldSnapshot);
 }
 
-function renderStats() {
+function renderStats(shieldSnapshot: ShieldSnapshot) {
   if (!panel) return;
-  panel.textContent = `Shield charge: ${count} · Missing charge: ${10 - count}`;
+  panel.textContent =
+    `Shield charge: ${shieldSnapshot.currCharge} · Missing charge: ${shieldSnapshot.missingCharge}`;
 }
 
-function setCount(next: number) {
-  const bounded = Math.max(0, Math.min(10, next));
-  if (bounded === count) return;
-  count = bounded;
-  drawMeter();
-  if (panel) updateStats();
+function setCurrCharge(shieldSnapshot: ShieldSnapshot, next: number) {
+  const bounded = Math.max(0, Math.min(shieldSnapshot.capacity, next));
+  if (bounded === shieldSnapshot.currCharge) return;
+  shieldSnapshot.currCharge = bounded;
+  shieldSnapshot.missingCharge = shieldSnapshot.capacity -
+    shieldSnapshot.currCharge;
+  drawMeter(shieldSnapshot);
+  if (panel) updateStats(shieldSnapshot);
 }
 
 document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
-  setCount(count - 1);
+  setCurrCharge(currentShield, currentShield.currCharge - 1);
 };
 document.querySelector<HTMLButtonElement>("#counter-more")!.onclick = () => {
-  setCount(count + 1);
+  setCurrCharge(currentShield, currentShield.currCharge + 1);
 };
 document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick = () => {
-  setCount(0);
+  setCurrCharge(currentShield, 0);
 };
 document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
   if (panel) return;
   panel = document.createElement("p");
   host.append(panel);
-  renderStats();
+  renderStats(currentShield);
 };
 document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
   if (!panel) return;
   panel.remove();
   panel = null;
 };
-drawMeter();
+drawMeter(currentShield);
