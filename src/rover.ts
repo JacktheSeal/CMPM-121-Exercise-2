@@ -38,10 +38,12 @@ function drawRover() {
 }
 
 type Command = {
+  label: string;
   execute(): void;
 };
 
 const forwardCommand: Command = {
+  label: "Forward",
   execute() {
     const newY = y + directionRecords[direction].yOffset;
     const newX = x + directionRecords[direction].xOffset;
@@ -55,6 +57,7 @@ const forwardCommand: Command = {
 };
 
 const rightCommand: Command = {
+  label: "Right",
   execute() {
     direction = (direction + 1) % 4;
     drawRover();
@@ -62,17 +65,53 @@ const rightCommand: Command = {
 };
 
 document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
-  forwardCommand.execute();
+  commandQueue.push(forwardCommand);
+  renderQueue();
 };
 
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
-  rightCommand.execute();
+  commandQueue.push(rightCommand);
+  renderQueue();
 };
+
+const commandQueue: Command[] = [];
+
+const displayQueue = document.querySelector<HTMLOListElement>(
+  "#rover-queue-status",
+)!;
+
+document.querySelector<HTMLButtonElement>("#rover-run")!.onclick = () => {
+  while (commandQueue.length > 0) {
+    const command = commandQueue.shift()!;
+    command.execute();
+  }
+
+  renderQueue();
+};
+document.querySelector<HTMLButtonElement>("#rover-clear")!.onclick = () => {
+  commandQueue.length = 0;
+  renderQueue();
+};
+
+function renderQueue() {
+  displayQueue.replaceChildren();
+
+  for (const command of commandQueue) {
+    const item = document.createElement("li");
+    item.textContent = command.label;
+    displayQueue.appendChild(item);
+  }
+}
 
 document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
   x = 2;
   y = 2;
   direction = 0;
+
+  commandQueue.length = 0;
+  renderQueue();
   drawRover();
 };
+
 drawRover();
+renderQueue();
